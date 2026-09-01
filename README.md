@@ -43,10 +43,11 @@ Two synthetic callers built from the real truth coordinates under stated error m
 
 ```
 make install
-make data      # GIAB truth VCF, confident BED, stratification BEDs for chr20
-make test      # the evaluation library, no Nextflow required
+panbench fetch --region chr20   # GIAB truth VCF, confident BED, stratification BEDs
+panbench experiment             # the two measurements above
+panbench report                 # print the summary from an existing run
+make test                       # the evaluation library, no Nextflow required
 
-python3 -m panbench.experiment    # the two measurements above
 nextflow run . -profile docker,laptop --sample HG002 --region chr20   # needs Docker
 ```
 
@@ -65,10 +66,11 @@ src/panbench/
   strata.py          regions, confident-region restriction, the interval index
   compare.py         precision / recall / F1 per stratum
   experiment.py      the real stratification, and the simulation
-tests/               14 tests, no Nextflow and no network
+tests/               18 tests, no Nextflow and no network
 ```
 
 ### More
 
+- [Analysis: what was done, and why it was done that way](ANALYSIS.md)
 - [Full results, including what the simulation does and does not establish](results/RESULTS.md)
 - [The strata, the callers, and the traps this pipeline avoids](docs/DESIGN.md)
