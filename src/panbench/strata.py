@@ -8,7 +8,7 @@ in hard sequence. That is the opposite of what a pangenome comparison is trying 
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 #: Strata reported separately, because aggregate F1 is dominated by easy sequence.
@@ -141,7 +141,7 @@ def restrict_indexed(
 
 
 def assign_stratum_indexed(
-    call: Call, memberships: dict[str, Sequence[Region] | IntervalIndex]
+    call: Call, memberships: Mapping[str, Sequence[Region] | IntervalIndex]
 ) -> str:
     """:func:`assign_stratum`, using indexes. Same first-match ordering."""
     for stratum in STRATA:
