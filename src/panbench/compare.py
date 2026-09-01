@@ -11,7 +11,15 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from panbench.strata import STRATA, Call, Region, assign_stratum, restrict
+from panbench.strata import (
+    STRATA,
+    Call,
+    IntervalIndex,
+    Region,
+    as_index,
+    assign_stratum_indexed,
+    restrict_indexed,
+)
 
 
 @dataclass(frozen=True)
@@ -44,12 +52,19 @@ class Counts:
 def compare(
     query: Sequence[Call],
     truth: Sequence[Call],
-    confident: Sequence[Region],
+    confident: Sequence[Region] | IntervalIndex,
 ) -> Counts:
-    """Compare one normalised call set against truth, inside confident regions only."""
-    excluded = len(query) - len(restrict(query, confident))
-    query_set = set(restrict(query, confident))
-    truth_set = set(restrict(truth, confident))
+    """Compare one normalised call set against truth, inside confident regions only.
+
+    Restriction happens before any counting, which is the whole point: a call outside the
+    confident regions is not a false positive, it is unknown, and scoring it as an error
+    systematically penalises whichever caller is more willing to call in hard regions.
+    """
+    index = as_index(confident)
+    kept_query = restrict_indexed(query, index)
+    excluded = len(query) - len(kept_query)
+    query_set = set(kept_query)
+    truth_set = set(restrict_indexed(truth, index))
     return Counts(
         true_positives=len(query_set & truth_set),
         false_positives=len(query_set - truth_set),
@@ -61,15 +76,30 @@ def compare(
 def compare_by_stratum(
     query: Sequence[Call],
     truth: Sequence[Call],
-    confident: Sequence[Region],
-    memberships: dict[str, Sequence[Region]],
+    confident: Sequence[Region] | IntervalIndex,
+    memberships: dict[str, Sequence[Region] | IntervalIndex],
 ) -> dict[str, Counts]:
-    """The primary output: one confusion table per stratum, aggregate reported separately."""
+    """The primary output: one confusion table per stratum, aggregate reported separately.
+
+    Aggregate F1 is dominated by the easy majority of a chromosome, so a real improvement
+    confined to hard regions is diluted into invisibility. Per stratum first, always.
+    """
+    index = as_index(confident)
+    indexed = {name: as_index(regions) for name, regions in memberships.items()}
+
+    # Assign once per call rather than once per call per stratum.
+    query_by_stratum: dict[str, list[Call]] = {}
+    truth_by_stratum: dict[str, list[Call]] = {}
+    for call in query:
+        query_by_stratum.setdefault(assign_stratum_indexed(call, indexed), []).append(call)
+    for call in truth:
+        truth_by_stratum.setdefault(assign_stratum_indexed(call, indexed), []).append(call)
+
     results: dict[str, Counts] = {}
     for stratum in STRATA:
-        stratum_query = [c for c in query if assign_stratum(c, memberships) == stratum]
-        stratum_truth = [c for c in truth if assign_stratum(c, memberships) == stratum]
+        stratum_query = query_by_stratum.get(stratum, [])
+        stratum_truth = truth_by_stratum.get(stratum, [])
         if not stratum_query and not stratum_truth:
             continue
-        results[stratum] = compare(stratum_query, stratum_truth, confident)
+        results[stratum] = compare(stratum_query, stratum_truth, index)
     return results

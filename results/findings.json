@@ -1,0 +1,172 @@
+{
+ "caller_comparison_not_run": "DeepVariant and its pangenome-aware variant need a container runtime and a reference genome. main.nf is written and unexecuted. No number here compares two real callers.",
+ "region": "chr20",
+ "region_length": 64444167,
+ "truth": {
+  "n_variants": 84998,
+  "n_in_confident": 81850,
+  "confident_bases": 56916239,
+  "confident_fraction": 0.8832,
+  "by_stratum": {
+   "segmental_duplication": 1716,
+   "homopolymer": 3747,
+   "mhc": 0,
+   "low_mappability": 2709,
+   "unique": 76826
+  },
+  "stratum_bases": {
+   "segmental_duplication": 2885987,
+   "homopolymer": 957549,
+   "mhc": 0,
+   "low_mappability": 5161676
+  }
+ },
+ "simulation": {
+  "disclaimer": "Synthetic call sets generated from the real truth coordinates under the stated error models. The conclusion is about the evaluation procedure, not about any caller.",
+  "seed": 0,
+  "arms": {
+   "linear_like": {
+    "model": {
+     "name": "linear_like",
+     "miss_rate": {
+      "unique": 0.01,
+      "homopolymer": 0.12,
+      "low_mappability": 0.25,
+      "segmental_duplication": 0.4,
+      "mhc": 0.3
+     },
+     "fp_per_100kb_confident": 1.0,
+     "fp_per_100kb_outside": 2.0
+    },
+    "n_calls": 83130,
+    "restricted": {
+     "true_positives": 79427,
+     "false_positives": 569,
+     "false_negatives": 2423,
+     "excluded": 3134,
+     "precision": 0.9929,
+     "recall": 0.9704,
+     "f1": 0.9815
+    },
+    "unrestricted": {
+     "true_positives": 82411,
+     "false_positives": 719,
+     "false_negatives": 2587,
+     "excluded": 0,
+     "precision": 0.9914,
+     "recall": 0.9696,
+     "f1": 0.9803
+    },
+    "by_stratum": {
+     "segmental_duplication": {
+      "true_positives": 971,
+      "false_positives": 11,
+      "false_negatives": 660,
+      "excluded": 81,
+      "precision": 0.9888,
+      "recall": 0.5953,
+      "f1": 0.7432
+     },
+     "homopolymer": {
+      "true_positives": 3106,
+      "false_positives": 8,
+      "false_negatives": 415,
+      "excluded": 202,
+      "precision": 0.9974,
+      "recall": 0.8821,
+      "f1": 0.9362
+     },
+     "low_mappability": {
+      "true_positives": 1831,
+      "false_positives": 7,
+      "false_negatives": 614,
+      "excluded": 251,
+      "precision": 0.9962,
+      "recall": 0.7489,
+      "f1": 0.855
+     },
+     "unique": {
+      "true_positives": 73519,
+      "false_positives": 543,
+      "false_negatives": 734,
+      "excluded": 2600,
+      "precision": 0.9927,
+      "recall": 0.9901,
+      "f1": 0.9914
+     }
+    }
+   },
+   "pangenome_like": {
+    "model": {
+     "name": "pangenome_like",
+     "miss_rate": {
+      "unique": 0.01,
+      "homopolymer": 0.08,
+      "low_mappability": 0.12,
+      "segmental_duplication": 0.18,
+      "mhc": 0.15
+     },
+     "fp_per_100kb_confident": 1.2,
+     "fp_per_100kb_outside": 8.0
+    },
+    "n_calls": 84553,
+    "restricted": {
+     "true_positives": 80214,
+     "false_positives": 682,
+     "false_negatives": 1636,
+     "excluded": 3657,
+     "precision": 0.9916,
+     "recall": 0.98,
+     "f1": 0.9858
+    },
+    "unrestricted": {
+     "true_positives": 83269,
+     "false_positives": 1284,
+     "false_negatives": 1729,
+     "excluded": 0,
+     "precision": 0.9848,
+     "recall": 0.9797,
+     "f1": 0.9822
+    },
+    "by_stratum": {
+     "segmental_duplication": {
+      "true_positives": 1323,
+      "false_positives": 11,
+      "false_negatives": 308,
+      "excluded": 223,
+      "precision": 0.9918,
+      "recall": 0.8112,
+      "f1": 0.8924
+     },
+     "homopolymer": {
+      "true_positives": 3239,
+      "false_positives": 10,
+      "false_negatives": 282,
+      "excluded": 213,
+      "precision": 0.9969,
+      "recall": 0.9199,
+      "f1": 0.9569
+     },
+     "low_mappability": {
+      "true_positives": 2133,
+      "false_positives": 10,
+      "false_negatives": 312,
+      "excluded": 472,
+      "precision": 0.9953,
+      "recall": 0.8724,
+      "f1": 0.9298
+     },
+     "unique": {
+      "true_positives": 73519,
+      "false_positives": 651,
+      "false_negatives": 734,
+      "excluded": 2749,
+      "precision": 0.9912,
+      "recall": 0.9901,
+      "f1": 0.9907
+     }
+    }
+   }
+  }
+ }
+}
