@@ -8,7 +8,7 @@ callers found.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from panbench.strata import (
@@ -77,7 +77,7 @@ def compare_by_stratum(
     query: Sequence[Call],
     truth: Sequence[Call],
     confident: Sequence[Region] | IntervalIndex,
-    memberships: dict[str, Sequence[Region] | IntervalIndex],
+    memberships: Mapping[str, Sequence[Region] | IntervalIndex],
 ) -> dict[str, Counts]:
     """The primary output: one confusion table per stratum, aggregate reported separately.
 
