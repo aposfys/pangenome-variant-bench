@@ -80,3 +80,49 @@ def test_stratified_report_separates_hard_from_easy_sequence() -> None:
 def test_reversed_regions_are_rejected() -> None:
     with pytest.raises(ValueError):
         Region("chr20", 2000, 1000)
+
+
+def test_interval_index_agrees_with_the_linear_scan():
+    """The fast path must be a pure optimisation, not a different answer."""
+    import random
+
+    from panbench.strata import IntervalIndex, restrict, restrict_indexed
+
+    rng = random.Random(0)
+    regions = [Region("chr20", i * 100, i * 100 + 37) for i in range(500)]
+    calls = [Call("chr20", rng.randrange(60000), "A", "T") for _ in range(1000)]
+    assert restrict(calls, regions) == restrict_indexed(calls, regions)
+    # And a prebuilt index gives the same answer as building one per call.
+    assert restrict_indexed(calls, IntervalIndex(regions)) == restrict_indexed(calls, regions)
+
+
+def test_interval_index_merges_overlapping_regions():
+    from panbench.strata import IntervalIndex
+
+    index = IntervalIndex([Region("c", 0, 10), Region("c", 5, 20), Region("c", 30, 40)])
+    assert len(index) == 2
+    assert index.total_bases() == 30
+    assert index.contains("c", 15)
+    assert not index.contains("c", 25)
+
+
+def test_interval_index_respects_half_open_bed_convention():
+    from panbench.strata import IntervalIndex
+
+    index = IntervalIndex([Region("c", 10, 20)])
+    assert index.contains("c", 10)  # start is inclusive
+    assert not index.contains("c", 20)  # end is exclusive
+    assert not index.contains("other", 15)
+
+
+def test_a_call_outside_confident_regions_is_excluded_not_counted_wrong():
+    """The central guarantee: unevaluable is not the same as wrong."""
+    from panbench.compare import compare
+
+    confident = [Region("chr20", 100, 200)]
+    truth = [Call("chr20", 150, "A", "T")]
+    query = [Call("chr20", 150, "A", "T"), Call("chr20", 900, "G", "C")]
+    counts = compare(query, truth, confident)
+    assert counts.true_positives == 1
+    assert counts.false_positives == 0  # the out-of-region call is not an error
+    assert counts.excluded == 1  # it is reported instead
