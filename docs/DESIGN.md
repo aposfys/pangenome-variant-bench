@@ -33,3 +33,23 @@ a best-practice framework for pangenome-based calling. Both report aggregate imp
 - **The pangenome and the truth set may share samples.** If HG002 contributed haplotypes to
   the pangenome graph, evaluating on HG002 measures memorisation. The graph used must
   exclude the evaluation sample, and the pipeline records which graph build was used.
+
+## Layout
+
+```
+main.nf              DSL2 workflow: align -> call (both ways) -> normalise -> compare
+                     (milestone stubs; the calling arm needs a Linux host)
+src/panbench/
+  fetch.py           GIAB truth, confident regions and stratifications, sliced per chromosome
+  strata.py          regions, confident-region restriction, the interval index
+  compare.py         precision / recall / F1 per stratum
+  experiment.py      the real stratification, and the simulation
+tests/               18 tests, no Nextflow and no network
+```
+
+The confident-region lookup was originally a linear scan over every region for
+every call — 86,000 calls against 10,000 regions is nearly a billion comparisons,
+fine in a test and hopeless on a chromosome. `IntervalIndex` merges overlapping
+intervals once and bisects, and a test asserts it returns exactly what the linear
+version does. The naive implementation is kept as the reference the fast one is
+checked against.
