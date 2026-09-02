@@ -43,6 +43,29 @@ distributed linux-64 only and `vg` has no macOS build at all, so the calling arm
 needs a Linux host with a container runtime. Its process bodies are milestones,
 not implementations. **No number here compares two real callers.**
 
+### Prior work, and what is left over
+
+**Both measurements above are established practice, not new findings, and the honest framing
+is that this repository implements the GA4GH recommendation rather than discovering it.**
+
+- Krusche et al., *Nature Biotechnology* 2019 — the GA4GH benchmarking framework. It
+  recommends stratifying performance by variant type and genome context, and it reports the
+  confident-region effect directly: SNV concordance between two methods is 99.7% inside
+  high-confidence regions against 76.5% outside. That is the same phenomenon this harness
+  prices, measured on real callers.
+- Zook et al., *Nature Biotechnology* 2019 — the GIAB benchmark set used here, which also
+  stratifies by variant type and genome context and discusses the interpretation problems
+  when a truth set is neither perfect nor comprehensive.
+- Prodanov et al., *Bioinformatics* 2023 — variant calling in low-copy repeats specifically,
+  where DeepVariant and GATK are compared inside the segmental-duplication stratum this
+  harness treats as its headline case.
+
+What this adds is an implementation you can run in one command on a laptop, with the
+stratification logic under test, and a controlled demonstration where the *size* of each
+mistake is priced against a known ground truth — 35× for aggregate dilution, 4.5× asymmetry
+for skipping confident-region restriction. That is a teaching and tooling contribution.
+**It is not a new result about variant calling, and the callers here are synthetic.**
+
 ### More
 
 - [Results](results/RESULTS.md) — full tables, and what the simulation does and does not establish
