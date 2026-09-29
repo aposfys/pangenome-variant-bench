@@ -37,6 +37,12 @@ def read_bed(path: Path) -> list[Region]:
 
 
 def read_vcf(path: Path) -> list[Call]:
+    """Biallelic records from a VCF, with positions converted to 0-based.
+
+    VCF ``POS`` is 1-based and BED intervals are 0-based half-open. Every containment test
+    in :mod:`panbench.strata` uses the BED convention, so ``POS`` is shifted by one here,
+    once, at the only place VCF coordinates enter the package.
+    """
     calls: list[Call] = []
     for line in path.read_text().splitlines():
         if line.startswith("#"):
@@ -50,9 +56,31 @@ def read_vcf(path: Path) -> list[Call]:
         if "," in fields[4]:
             continue
         calls.append(
-            Call(chrom=fields[0], position=int(fields[1]), ref=fields[3], alt=fields[4])
+            Call(chrom=fields[0], position=int(fields[1]) - 1, ref=fields[3], alt=fields[4])
         )
     return calls
+
+
+def read_contig_length(path: Path, region: str) -> int:
+    """The length of ``region`` from the VCF ``##contig`` header.
+
+    Read from the data rather than hard-coded, so that a run on any chromosome places its
+    synthetic calls on that chromosome and reports its own confident fraction.
+    """
+    with path.open() as handle:
+        for line in handle:
+            if not line.startswith("##"):
+                break
+            if not line.startswith("##contig=<"):
+                continue
+            fields = dict(
+                item.split("=", 1)
+                for item in line.strip()[len("##contig=<") : -1].split(",")
+                if "=" in item
+            )
+            if fields.get("ID") == region and "length" in fields:
+                return int(fields["length"])
+    raise RuntimeError(f"no ##contig length for {region} in the header of {path}")
 
 
 @dataclass
@@ -132,7 +160,7 @@ def simulate_caller(
     attempts = 0
     while (made_confident < n_confident or made_outside < n_outside) and attempts < 2_000_000:
         attempts += 1
-        position = rng.randrange(1, region_length)
+        position = rng.randrange(0, region_length)
         if position in truth_positions:
             continue
         inside = confident.contains(region, position)
@@ -150,9 +178,10 @@ def simulate_caller(
 def compare_unrestricted(query: list[Call], truth: list[Call]) -> Counts:
     """Score without confident-region restriction -- the mistake, measured.
 
-    Every query call outside the confident regions becomes a false positive here, because
-    nothing removed it. This function exists to quantify the damage, and is never used for
-    a reported result.
+    Query calls outside the confident regions are scored against the truth VCF as if it
+    were complete there. Those matching a truth record count as true positives and the rest
+    as false positives. This function exists to quantify that mistake and is never used
+    for a reported result.
     """
     query_set = set(query)
     truth_set = set(truth)
@@ -162,6 +191,59 @@ def compare_unrestricted(query: list[Call], truth: list[Call]) -> Counts:
         false_negatives=len(truth_set - query_set),
         excluded=0,
     )
+
+
+def derive_headline(
+    linear: tuple[Counts, Counts, dict[str, Counts]],
+    pangenome: tuple[Counts, Counts, dict[str, Counts]],
+) -> dict:
+    """The differences and ratios the write-up quotes, from unrounded counts.
+
+    Computed here rather than by subtracting the rounded values in ``arms``, which shifts
+    the last digit.
+    """
+    lin_restricted, lin_unrestricted, lin_strata = linear
+    pan_restricted, pan_unrestricted, pan_strata = pangenome
+
+    aggregate_gain = pan_restricted.f1 - lin_restricted.f1
+    segdup = "segmental_duplication"
+    segdup_gain = (
+        pan_strata[segdup].f1 - lin_strata[segdup].f1
+        if segdup in pan_strata and segdup in lin_strata
+        else None
+    )
+    lin_loss = lin_restricted.precision - lin_unrestricted.precision
+    pan_loss = pan_restricted.precision - pan_unrestricted.precision
+
+    def outside(restricted: Counts, unrestricted: Counts) -> dict[str, int]:
+        return {
+            "calls_outside_confident": restricted.excluded,
+            "scored_as_true_positive_unrestricted": (
+                unrestricted.true_positives - restricted.true_positives
+            ),
+            "scored_as_false_positive_unrestricted": (
+                unrestricted.false_positives - restricted.false_positives
+            ),
+        }
+
+    return {
+        "aggregate_f1_gain": round(aggregate_gain, 4),
+        "segdup_f1_gain": None if segdup_gain is None else round(segdup_gain, 4),
+        "segdup_to_aggregate_ratio": (
+            None
+            if segdup_gain is None or aggregate_gain == 0
+            else round(segdup_gain / aggregate_gain, 1)
+        ),
+        "precision_loss_unrestricted": {
+            "linear_like": round(lin_loss, 4),
+            "pangenome_like": round(pan_loss, 4),
+        },
+        "precision_loss_ratio": None if lin_loss == 0 else round(pan_loss / lin_loss, 2),
+        "outside_confident": {
+            "linear_like": outside(lin_restricted, lin_unrestricted),
+            "pangenome_like": outside(pan_restricted, pan_unrestricted),
+        },
+    }
 
 
 def run(data_dir: Path, results_dir: Path, *, region: str = "chr20", seed: int = 0) -> dict:
@@ -181,8 +263,7 @@ def run(data_dir: Path, results_dir: Path, *, region: str = "chr20", seed: int =
         if path.exists():
             memberships[stratum] = IntervalIndex(read_bed(path))
 
-    # chr20 length, GRCh38.
-    region_length = 64_444_167
+    region_length = read_contig_length(sliced / f"truth.{region}.vcf", region)
 
     # ---- measurement 1: the real data -------------------------------------------------
     distribution: dict[str, int] = dict.fromkeys(STRATA, 0)
@@ -201,6 +282,7 @@ def run(data_dir: Path, results_dir: Path, *, region: str = "chr20", seed: int =
 
     # ---- measurement 2: the simulation ------------------------------------------------
     arms = {}
+    scored: dict[str, tuple[Counts, Counts, dict[str, Counts]]] = {}
     for model in (LINEAR_LIKE, PANGENOME_LIKE):
         calls = simulate_caller(
             truth,
@@ -214,6 +296,7 @@ def run(data_dir: Path, results_dir: Path, *, region: str = "chr20", seed: int =
         restricted = compare(calls, truth, confident)
         unrestricted = compare_unrestricted(calls, truth)
         by_stratum = compare_by_stratum(calls, truth, confident, memberships)
+        scored[model.name] = (restricted, unrestricted, by_stratum)
         arms[model.name] = {
             "model": asdict(model),
             "n_calls": len(calls),
@@ -247,6 +330,8 @@ def run(data_dir: Path, results_dir: Path, *, region: str = "chr20", seed: int =
             f"F1 {unrestricted.f1:.4f}"
         )
 
+    derived = derive_headline(scored[LINEAR_LIKE.name], scored[PANGENOME_LIKE.name])
+
     findings = {
         "caller_comparison_not_run": (
             "DeepVariant and its pangenome-aware variant need a container runtime and a "
@@ -273,6 +358,7 @@ def run(data_dir: Path, results_dir: Path, *, region: str = "chr20", seed: int =
             ),
             "seed": seed,
             "arms": arms,
+            "derived": derived,
         },
     }
     results_dir.mkdir(parents=True, exist_ok=True)

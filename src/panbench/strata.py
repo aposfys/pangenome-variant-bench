@@ -33,7 +33,11 @@ class Region:
 
 @dataclass(frozen=True)
 class Call:
-    """One variant call, reduced to what the comparison needs."""
+    """One variant call, reduced to what the comparison needs.
+
+    ``position`` is 0-based, the BED convention, so that it can be tested directly against
+    a :class:`Region`. :func:`panbench.experiment.read_vcf` converts from VCF ``POS``.
+    """
 
     chrom: str
     position: int
@@ -62,6 +66,9 @@ def excluded_count(calls: Sequence[Call], regions: Sequence[Region]) -> int:
 
 def assign_stratum(call: Call, memberships: dict[str, Sequence[Region]]) -> str:
     """Assign a call to the first stratum containing it, defaulting to ``unique``.
+
+    ``unique`` means only that the site is in none of the listed strata. It still contains
+    longer homopolymers, other tandem repeats and anything else the four BEDs do not cover.
 
     Order matters and follows :data:`STRATA`: a site can be both a segmental duplication
     and low-mappability, and reporting it twice would inflate whichever stratum is listed

@@ -2,9 +2,9 @@
 
 Everything here is real published data, pinned to a release. Nothing is generated.
 
-The download is restricted to one chromosome on the way in rather than afterwards, because
-the whole-genome truth VCF is 149 MB and the point of scoping this project to chr20 is that
-it should run on a laptop.
+The whole-genome files are downloaded once into ``data/raw`` (about 191 MB in total, most of
+it the truth VCF) and then sliced to one chromosome, so that everything downstream runs on
+a laptop.
 """
 
 from __future__ import annotations
@@ -28,8 +28,9 @@ STRATIFICATION_BASE = (
 TRUTH_VCF = "HG002_GRCh38_1_22_v4.2.1_benchmark.vcf.gz"
 CONFIDENT_BED = "HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed"
 
-#: The strata. Order matters: :func:`panbench.strata.assign_stratum` takes the first match,
-#: so the most specific and most interesting regions come first.
+#: The stratification BEDs to fetch. Download order only. The precedence used when a site
+#: falls in more than one stratum is :data:`panbench.strata.STRATA`.
+#: The homopolymer file covers runs of 7 to 11 bp (with 5 bp slop), not all homopolymers.
 STRATIFICATIONS: tuple[tuple[str, str], ...] = (
     ("mhc", "OtherDifficult/GRCh38_MHC.bed.gz"),
     ("segdup", "SegmentalDuplications/GRCh38_segdups.bed.gz"),
