@@ -6,6 +6,10 @@
  * Linear-reference versus pangenome-aware variant calling on one GIAB sample,
  * scoped to a single chromosome so a full run fits on a laptop.
  *
+ * Status. This is a skeleton and has never been run. The processes below are milestone
+ * stubs, the workflow block does not invoke them yet, and there is no reads input and no
+ * container directive. The calling arm needs a Linux host with Docker.
+ *
  * The comparison step is deliberately the last one and the only one that produces a
  * number: everything before it must be identical between the two arms, or the comparison
  * measures pipeline differences rather than reference differences.
@@ -100,7 +104,7 @@ process COMPARE {
 
     script:
     """
-    echo "milestone 3: hap.py stratified comparison, then panbench.report" >&2
+    echo "milestone 3: hap.py stratified comparison, then panbench.compare per stratum" >&2
     exit 1
     """
 }

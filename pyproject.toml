@@ -1,31 +1,28 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "panbench"
 version = "0.1.0"
-description = "Stratified evaluation of linear versus pangenome-aware variant calling"
+description = "Stratified variant-calling evaluation on GIAB truth data, demonstrated with simulated callers"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Apostolos Fysekidis" }]
-keywords = ["genomics", "variant-calling", "pangenome", "deepvariant", "giab", "nextflow"]
+keywords = ["genomics", "variant-calling", "giab", "benchmarking", "stratification"]
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-dependencies = ["numpy>=1.24"]
+dependencies = []
 
 [project.scripts]
 panbench = "panbench.cli:main"
 
 [project.optional-dependencies]
-vcf = ["pysam>=0.22"]
-figures = ["matplotlib>=3.7"]
-dev = ["pytest>=7.0", "numpy>=1.24", "ruff>=0.6", "mypy>=1.11"]
+dev = ["pytest>=7.0", "ruff>=0.6", "mypy>=1.11"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,7 +1,8 @@
-"""Stratified comparison of linear-reference and pangenome-aware variant calling.
+"""Stratified evaluation of variant calls against GIAB truth data.
 
-The Nextflow workflow orchestrates the tools; this package owns the evaluation, kept
-separate so the numbers can be tested without a container runtime or a reference genome.
+The linear versus pangenome-aware caller comparison sketched in ``main.nf`` has not been
+run. This package owns the evaluation, kept separate so the numbers can be tested without
+a container runtime or a reference genome.
 """
 
 __version__ = "0.1.0"

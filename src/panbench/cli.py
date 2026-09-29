@@ -1,7 +1,7 @@
 """Command line entry point: ``python -m panbench.cli`` or ``panbench``.
 
-The Nextflow workflow is the caller comparison and needs Docker. Everything reachable from
-here is the evaluation layer, which does not.
+The planned caller comparison in ``main.nf`` needs Docker and has not been run. Everything
+reachable from here is the evaluation layer, which does not need it.
 """
 
 from __future__ import annotations
@@ -15,7 +15,10 @@ from panbench import __version__
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="panbench",
-        description="Where does a pangenome reference actually help?",
+        description=(
+            "Stratified variant-calling evaluation on GIAB truth data, "
+            "demonstrated with simulated callers."
+        ),
     )
     parser.add_argument("--version", action="version", version=f"panbench {__version__}")
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
