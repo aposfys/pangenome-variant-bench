@@ -171,6 +171,12 @@
   "derived": {
    "aggregate_f1_gain": 0.0041,
    "segdup_f1_gain": 0.1492,
+   "f1_gain_by_stratum": {
+    "segmental_duplication": 0.1492,
+    "homopolymer": 0.02,
+    "low_mappability": 0.0738,
+    "unique": -0.0007
+   },
    "segdup_to_aggregate_ratio": 36.0,
    "precision_loss_unrestricted": {
     "linear_like": 0.0015,

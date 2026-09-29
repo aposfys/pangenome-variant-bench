@@ -229,6 +229,11 @@ def derive_headline(
     return {
         "aggregate_f1_gain": round(aggregate_gain, 4),
         "segdup_f1_gain": None if segdup_gain is None else round(segdup_gain, 4),
+        "f1_gain_by_stratum": {
+            name: round(pan_strata[name].f1 - lin_strata[name].f1, 4)
+            for name in STRATA
+            if name in pan_strata and name in lin_strata
+        },
         "segdup_to_aggregate_ratio": (
             None
             if segdup_gain is None or aggregate_gain == 0

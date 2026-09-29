@@ -108,6 +108,7 @@ def test_run_writes_findings_with_derived_numbers(tmp_path):
     assert json.loads((tmp_path / "results" / "findings.json").read_text()) == findings
 
     derived = findings["simulation"]["derived"]
+    assert set(derived["f1_gain_by_stratum"]) == {"segmental_duplication", "unique"}
     for name, model in (("linear_like", LINEAR_LIKE), ("pangenome_like", PANGENOME_LIKE)):
         outside = derived["outside_confident"][name]
         assert outside["calls_outside_confident"] == (
