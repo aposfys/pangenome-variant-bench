@@ -113,7 +113,7 @@ def fetch(data_dir: Path, *, region: str = "chr20") -> Fetched:
     sliced = data_dir / region
     sliced.mkdir(parents=True, exist_ok=True)
 
-    print(f"truth VCF ({TRUTH_VCF}, ~149 MB on first run)...", flush=True)
+    print(f"truth VCF ({TRUTH_VCF}, ~156 MB on first run)...", flush=True)
     truth_source = _download(f"{GIAB_BASE}/{TRUTH_VCF}", raw / TRUTH_VCF)
     truth = sliced / f"truth.{region}.vcf"
     n_variants = (

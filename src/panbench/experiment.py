@@ -100,7 +100,7 @@ class ErrorModel:
     fp_per_100kb_outside: float
 
 
-#: Stands in for a linear-reference caller: good on unique sequence, poor in hard regions,
+#: Stands in for a linear-reference caller. Good outside the difficult strata, poor in them,
 #: and conservative about calling where it is unsure.
 LINEAR_LIKE = ErrorModel(
     name="linear_like",
